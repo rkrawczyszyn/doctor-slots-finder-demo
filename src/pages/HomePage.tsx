@@ -11,18 +11,19 @@ export const HomePage: React.FC = () => {
   const [startDate, setStartDate] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
 
-  const { slots, loadSlots, loading, error } = useDoctorSlots(doctorDetails);
+  const { data, loadSlots, loading, error } = useDoctorSlots();
 
   const toggleSortOrder = () => setSortAsc(!sortAsc);
 
-  const filteredSlots = slots
+  const filteredSlots = data?.slots
     .filter(
       (slot) =>
         slot.start.includes(startDate) &&
         doctorDetails
           .find((doc) => doc.id === slot.doctor_id)
           ?.displayName.toLowerCase()
-          .includes(doctorNameFilter.toLowerCase())
+          .includes(doctorNameFilter.toLowerCase()) &&
+        !slot.booked
     )
     .sort((a, b) =>
       sortAsc
@@ -30,7 +31,7 @@ export const HomePage: React.FC = () => {
         : new Date(b.start).getTime() - new Date(a.start).getTime()
     );
 
-  const displaySlots = filteredSlots.map((fs) => {
+  const displaySlots = filteredSlots?.map((fs) => {
     const [date, time] = fs.start.split("T");
     return {
       date,
@@ -67,7 +68,9 @@ export const HomePage: React.FC = () => {
           </div>
         )}
         {error && <Alert variant="danger">Error: {error}</Alert>}
-        <SlotList slots={displaySlots} />
+        {displaySlots && (
+          <SlotList slots={displaySlots} metadata={data?.metadata} />
+        )}
       </Container>
     </>
   );

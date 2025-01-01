@@ -15,3 +15,12 @@ export interface DoctorDetail {
   displayName: string;
   addressId: number;
 }
+
+export interface Metadata {
+  updatedOn: string;
+}
+
+export interface Result {
+  metadata: Metadata;
+  slots: DoctorSlot[];
+}

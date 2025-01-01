@@ -1,12 +1,9 @@
 import { useState } from "react";
-import { DoctorDetail, DoctorSlot } from "../types";
-import { API_BASE_URL, fetchDoctorSlots } from "../services/api";
+import { Result } from "../types";
+import { fetchDoctorSlots } from "../services/api";
 
-const filterDateStart = "2024-12-25";
-const filterDateEnd = "2025-01-24";
-
-export const useDoctorSlots = (doctorDetails: DoctorDetail[]) => {
-  const [slots, setSlots] = useState<DoctorSlot[]>([]);
+export const useDoctorSlots = () => {
+  const [data, setData] = useState<Result>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,12 +11,8 @@ export const useDoctorSlots = (doctorDetails: DoctorDetail[]) => {
     try {
       setLoading(true);
       setError("");
-      const doctorUrls = doctorDetails.map(
-        (doctor) =>
-          `${API_BASE_URL}/doctors/${doctor.id}/addresses/${doctor.addressId}/slots?start=${filterDateStart}T00%3A00%3A00%2B01%3A00&end=${filterDateEnd}T23%3A59%3A59%2B01%3A00`
-      );
-      const data = await fetchDoctorSlots(doctorUrls);
-      setSlots(data);
+      const data = await fetchDoctorSlots();
+      setData(data);
     } catch (err) {
       setError("Failed to fetch doctor slots.");
     } finally {
@@ -27,5 +20,5 @@ export const useDoctorSlots = (doctorDetails: DoctorDetail[]) => {
     }
   };
 
-  return { slots, loadSlots, loading, error };
+  return { data, loadSlots, loading, error };
 };
