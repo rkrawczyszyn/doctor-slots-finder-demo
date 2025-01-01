@@ -2,7 +2,7 @@
   "name": "doctor-slots",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://rkrawczyszyn.github.io/demo2",
+  "homepage": "https://rkrawczyszyn.github.io/doctor-slots-finder-demo",
   "dependencies": {
     "@chakra-ui/react": "^3.2.3",
     "@emotion/react": "^11.14.0",
