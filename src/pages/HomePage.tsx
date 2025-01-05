@@ -1,30 +1,53 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Filters } from "../components/SearchFilter";
 import { useDoctorSlots } from "../hooks/useDoctorSlots";
 import { doctorDetails } from "../data/doctorDetails";
 import { Header } from "../components/Header";
 import { Alert, Button, Container, Spinner } from "react-bootstrap";
-import SlotList, { Slot } from "../components/SlotList";
+import SlotList from "../components/SlotList";
 
 export const HomePage: React.FC = () => {
   const [doctorNameFilter, setDoctorNameFilter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
+  const [afterSeventeen, setAfterSeventeen] = useState(false);
+  const [afterEighteen, setAfterEighteen] = useState(false);
 
   const { data, loadSlots, loading, error } = useDoctorSlots();
 
+  useEffect(() => {
+    const setup = async () => {
+      await loadSlots();
+    };
+
+    setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleSortOrder = () => setSortAsc(!sortAsc);
+  const toggleFilterSeventeen = () => setAfterSeventeen(!afterSeventeen);
+  const toggleFilterEighteen = () => setAfterEighteen(!afterEighteen);
 
   const filteredSlots = data?.slots
-    .filter(
-      (slot) =>
-        slot.start.includes(startDate) &&
-        doctorDetails
-          .find((doc) => doc.id === slot.doctor_id)
-          ?.displayName.toLowerCase()
-          .includes(doctorNameFilter.toLowerCase()) &&
-        !slot.booked
-    )
+    .filter((slot) => {
+      const fulfillsDate = slot.start.includes(startDate);
+      const doctorNameMatches = doctorDetails
+        .find((doc) => doc.id === slot.doctor_id)
+        ?.displayName.toLowerCase()
+        .includes(doctorNameFilter.toLowerCase());
+      const notBooked = !slot.booked;
+      const time = slot.start.split("T")[1]; // split datetime and pick time part
+      const after17Condition = afterSeventeen ? time >= "17:00:00" : true;
+      const after18Condition = afterEighteen ? time >= "18:00:00" : true;
+
+      return (
+        fulfillsDate &&
+        doctorNameMatches &&
+        notBooked &&
+        after17Condition &&
+        after18Condition
+      );
+    })
     .sort((a, b) =>
       sortAsc
         ? new Date(a.start).getTime() - new Date(b.start).getTime()
@@ -55,17 +78,16 @@ export const HomePage: React.FC = () => {
           sortAsc={sortAsc}
           toggleSortOrder={toggleSortOrder}
         />
-        <div className="my-3">
-          <Button onClick={loadSlots} variant="primary">
-            Fetch Data
-          </Button>
-        </div>
+        <Button onClick={toggleFilterSeventeen}>
+          {afterSeventeen ? "Show All Times" : "Filter Slots After 17:00"}
+        </Button>
+        <Button onClick={toggleFilterEighteen} className="ms-2">
+          {afterEighteen ? "Show All Times" : "Filter Slots After 18:00"}
+        </Button>
         {loading && (
-          <div className="text-center my-3">
-            <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </Spinner>
-          </div>
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
         )}
         {error && <Alert variant="danger">Error: {error}</Alert>}
         {displaySlots && (
